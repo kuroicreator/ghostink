@@ -188,4 +188,607 @@
 
   .comments{margin-top:40px;padding-top:24px;border-top:1px solid rgba(243,236,221,0.1);}
   .comments h3{font-family:var(--display);font-size:18px;text-transform:uppercase;margin-bottom:16px;}
-  .comment-form{display:flex;
+  .comment-form{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;}
+  .comment-form input{
+    flex:1;padding:10px 14px;background:var(--ink-2);border:1px solid rgba(243,236,221,0.15);
+    border-radius:var(--radius);color:var(--paper);font-size:13px;min-width:120px;
+  }
+  .comment{padding:12px 0;border-bottom:1px solid rgba(243,236,221,0.06);}
+  .comment .who{font-weight:700;font-size:13px;color:var(--jade);margin-right:8px;}
+  .comment .when{font-family:var(--mono);font-size:10.5px;color:var(--muted);}
+  .comment p{margin:4px 0 0;font-size:13.5px;color:var(--paper-dim);}
+
+  .form-card{
+    background:var(--ink-2);border:1px solid rgba(243,236,221,0.1);border-radius:6px;
+    padding:28px;max-width:640px;margin-top:24px;
+  }
+  .form-card h2{font-family:var(--display);font-size:24px;text-transform:uppercase;margin:0 0 6px;}
+  .form-card .sub{color:var(--muted);font-size:13px;margin-bottom:24px;}
+  .field{margin-bottom:18px;}
+  .field label{display:block;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);margin-bottom:6px;}
+  .field input, .field textarea, .field select{
+    width:100%;padding:11px 14px;background:var(--ink);border:1px solid rgba(243,236,221,0.15);
+    border-radius:var(--radius);color:var(--paper);font-size:14px;font-family:var(--body);
+  }
+  .field textarea{resize:vertical;min-height:80px;}
+  .panel-editor{border:1px dashed rgba(243,236,221,0.25);border-radius:4px;padding:14px;margin-bottom:10px;}
+  .panel-editor-row{display:flex;gap:10px;align-items:center;}
+  .panel-editor-row input{flex:1;}
+  .remove-x{background:none;border:none;color:var(--brush);font-size:18px;padding:4px 8px;cursor:pointer;}
+  .add-panel-btn{
+    width:100%;padding:10px;border:1px dashed rgba(243,236,221,0.3);background:transparent;color:var(--paper-dim);
+    border-radius:4px;font-size:13px;margin-top:6px;
+  }
+  .add-panel-btn:hover{border-color:var(--paper);color:var(--paper);}
+
+  .empty-state{text-align:center;padding:80px 20px;color:var(--muted);}
+  .empty-state h3{font-family:var(--display);font-size:26px;color:var(--paper);text-transform:uppercase;margin-bottom:8px;}
+  .grid-series{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:18px;margin-top:20px;}
+
+  .toast{
+    position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
+    background:var(--paper);color:var(--ink);padding:12px 20px;border-radius:20px;
+    font-size:13px;font-weight:600;z-index:100;opacity:0;pointer-events:none;transition:opacity .2s, transform .2s;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(-6px);}
+
+  footer.site{
+    text-align:center;padding:40px 20px;color:var(--muted);font-family:var(--mono);font-size:11px;
+    border-top:1px solid rgba(243,236,221,0.08);margin-top:60px;
+  }
+
+  @media(max-width:640px){
+    header.site{padding:12px 16px;gap:12px;}
+    nav.site-nav{display:none;}
+    .search-wrap{max-width:none;}
+    #app{padding:0 16px 60px;}
+    .hero h1{font-size:36px;}
+    .hero-inner{padding:22px;}
+    .series-cover{width:150px;height:200px;flex-basis:150px;}
+    .series-info h1{font-size:28px;}
+    .ink-rail{display:none;}
+  }
+</style>
+</head>
+<body>
+
+<header class="site">
+  <img class="logo-img" id="logoImg" src="logo.jpg" alt="GhostInk logo" onclick="location.hash='#/home'" />
+  <nav class="site-nav" id="siteNav">
+    <a href="#/home" data-route="home">Home</a>
+    <a href="#/browse" data-route="browse">Series</a>
+    <a href="#/about" data-route="about">About</a>
+    <a href="#/library" data-route="library">Library</a>
+  </nav>
+  <div class="search-wrap">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input id="searchInput" placeholder="Search series…" />
+  </div>
+</header>
+
+<div id="app"></div>
+<div class="toast" id="toast"></div>
+
+<footer class="site">
+  GhostInk — the webtoon studio of <span id="footerArtist">Kuro</span> · 
+  <a href="#/upload" style="text-decoration:underline;opacity:0.7;">publish new chapter</a>
+</footer>
+
+<script>
+/* ================= DATA ================= */
+const GENRES = ["Fantasy","Romance","Action","Slice of Life","Horror","Sci-Fi","Comedy","Drama"];
+
+const ARTIST = {
+  name: "Kuro",
+  tagline: "Vertical-scroll stories drawn one panel at a time.",
+  bio: "I create original webtoons and post them here first. GhostInk is my personal studio — every chapter lands here straight from the sketchbook.",
+  location: "Independent creator",
+  socials: [
+    { label: "Instagram", url: "#" },
+    { label: "Twitter / X", url: "#" }
+  ],
+  support: [
+    { label: "Ko-fi", url: "#" },
+    { label: "Patreon", url: "#" }
+  ]
+};
+
+const COVER_PALETTES = [
+  ["#e8402b","#7a1f14"],["#2f8f7a","#123a32"],["#c98a2b","#5c3a10"],
+  ["#5a4fc9","#241f5c"],["#c92b6a","#5c1030"],["#2b8bc9","#0f3a5c"],
+  ["#8f2fce","#3a1263"],["#4fa63d","#1c4515"]
+];
+
+function uid(prefix){ return prefix + "_" + Math.random().toString(36).slice(2,9) + Date.now().toString(36).slice(-4); }
+function hash(str){ let h=0; for(let i=0;i<str.length;i++){ h = (h*31 + str.charCodeAt(i))|0; } return Math.abs(h); }
+function paletteFor(seed){ return COVER_PALETTES[hash(seed) % COVER_PALETTES.length]; }
+function fmtDate(ts){ const d=new Date(ts); return d.toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'}); }
+function timeAgo(ts){
+  const s = Math.floor((Date.now()-ts)/1000);
+  if(s<60) return "just now";
+  if(s<3600) return Math.floor(s/60)+"m ago";
+  if(s<86400) return Math.floor(s/3600)+"h ago";
+  return Math.floor(s/86400)+"d ago";
+}
+function escapeHtml(str){
+  return String(str).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(toast._tm);
+  toast._tm = setTimeout(()=>t.classList.remove('show'), 2200);
+}
+
+/* ================= STORAGE (fixed for normal browsers) ================= */
+const Store = {
+  getIndex(){
+    try{ const r = localStorage.getItem('gi-series-index'); return r ? JSON.parse(r) : []; }
+    catch(e){ return []; }
+  },
+  saveIndex(arr){ localStorage.setItem('gi-series-index', JSON.stringify(arr)); },
+  getSeries(id){
+    try{ const r = localStorage.getItem('gi-series:'+id); return r ? JSON.parse(r) : null; }
+    catch(e){ return null; }
+  },
+  saveSeries(s){ localStorage.setItem('gi-series:'+s.id, JSON.stringify(s)); },
+  getAllSeries(){
+    const idx = this.getIndex();
+    return idx.map(id => this.getSeries(id)).filter(Boolean).sort((a,b)=>b.updatedAt-a.updatedAt);
+  },
+  getComments(chapterId){
+    try{ const r = localStorage.getItem('gi-comments:'+chapterId); return r ? JSON.parse(r) : []; }
+    catch(e){ return []; }
+  },
+  addComment(chapterId, who, text){
+    const list = this.getComments(chapterId);
+    list.push({id:uid('c'), who, text, ts:Date.now()});
+    localStorage.setItem('gi-comments:'+chapterId, JSON.stringify(list));
+    return list;
+  },
+  getLibrary(){
+    try{ const r = localStorage.getItem('gi-library'); return r ? JSON.parse(r) : []; }
+    catch(e){ return []; }
+  },
+  toggleLibrary(seriesId){
+    let lib = this.getLibrary();
+    if(lib.includes(seriesId)) lib = lib.filter(x=>x!==seriesId);
+    else lib.push(seriesId);
+    localStorage.setItem('gi-library', JSON.stringify(lib));
+    return lib;
+  },
+  getProgress(seriesId){
+    try{ const r = localStorage.getItem('gi-progress:'+seriesId); return r ? JSON.parse(r) : null; }
+    catch(e){ return null; }
+  },
+  setProgress(seriesId, chapterId){
+    localStorage.setItem('gi-progress:'+seriesId, JSON.stringify({chapterId, ts:Date.now()}));
+  }
+};
+
+/* seed demo content on first visit */
+function seedIfEmpty(){
+  const idx = Store.getIndex();
+  if(idx.length > 0) return;
+  const seeds = [
+    {title:"Low Tide Diner", genre:"Slice of Life",
+     synopsis:"A tiny diner open only during low tide, and the strange regulars who always arrive on time."},
+    {title:"The Hollow Choir", genre:"Horror",
+     synopsis:"Every year the village sings the same song to keep something asleep. This year, someone forgets a line."},
+    {title:"Nine Tailwinds", genre:"Fantasy",
+     synopsis:"A courier fox-spirit runs letters between worlds — until one delivery goes catastrophically wrong."}
+  ];
+  const now = Date.now();
+  const ids = [];
+  seeds.forEach((s,i)=>{
+    const id = uid('s');
+    const chapters = [];
+    for(let c=1;c<=3;c++){
+      const panels = [];
+      for(let p=0;p<5;p++) panels.push({url:null, seed:id+'-'+c+'-'+p, caption:'panel '+(p+1)});
+      chapters.push({id:uid('ch'), num:c, title: c===1?"Prologue":"Chapter "+c, panels, createdAt: now-(3-c)*86400000*2});
+    }
+    const series = {
+      id, title:s.title, author:ARTIST.name, genre:s.genre, synopsis:s.synopsis,
+      chapters, likes:20+i*11, views:300+i*180, createdAt:now-i*86400000, updatedAt:now-i*3600000
+    };
+    Store.saveSeries(series);
+    ids.push(id);
+  });
+  Store.saveIndex(ids);
+}
+
+/* ================= RENDER HELPERS ================= */
+function coverStyle(seed){
+  const [c1,c2] = paletteFor(seed);
+  return `background:linear-gradient(155deg, ${c1}, ${c2} 75%);`;
+}
+function panelPlaceholderStyle(seed){
+  const [c1,c2] = paletteFor(seed);
+  const angle = hash(seed)%360;
+  return `background:radial-gradient(circle at ${hash(seed+'x')%100}% ${hash(seed+'y')%100}%, ${c1}55, transparent 60%),linear-gradient(${angle}deg, ${c1}, ${c2});`;
+}
+function seriesCard(s){
+  return `
+  <div class="card" onclick="location.hash='#/series/${s.id}'">
+    <div class="cover" style="${coverStyle(s.id)}">
+      <div>
+        <span class="genre-pill">${s.genre}</span><br/>
+        <span class="title">${escapeHtml(s.title)}</span>
+      </div>
+    </div>
+    <div class="meta"><span class="author">${escapeHtml(s.author)}</span>${s.chapters.length} ch · ${s.likes}♥</div>
+  </div>`;
+}
+
+/* ================= ROUTES ================= */
+const app = document.getElementById('app');
+
+function renderHome(){
+  seedIfEmpty();
+  const all = Store.getAllSeries();
+  const latest = all[0];
+  const latestChapter = latest ? [...latest.chapters].sort((a,b)=>b.num-a.num)[0] : null;
+
+  app.innerHTML = `
+    <div class="hero">
+      <div class="hero-inner">
+        <div class="eyebrow">${escapeHtml(ARTIST.location)}</div>
+        <h1>${escapeHtml(ARTIST.name)}</h1>
+        <p>${escapeHtml(ARTIST.tagline)}</p>
+        <div class="hero-actions">
+          ${latest ? `<button class="btn-primary" onclick="location.hash='#/read/${latest.id}/${latestChapter.id}'">Read Latest Chapter</button>` : ''}
+          <button class="btn-ghost" onclick="location.hash='#/about'">About Me</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="shelf">
+      <div class="shelf-head"><h2><span class="tick"></span>All Series</h2><span class="count">${all.length} title${all.length===1?'':'s'}</span></div>
+      ${all.length ? `<div class="grid-series">${all.map(seriesCard).join('')}</div>` :
+        `<div class="empty-state"><h3>Nothing here yet</h3>Publish your first series from the upload page.</div>`}
+    </div>
+  `;
+}
+
+function renderAbout(){
+  const [c1,c2] = paletteFor(ARTIST.name);
+  app.innerHTML = `
+    <div class="series-hero">
+      <div class="series-cover" style="width:200px;height:200px;border-radius:50%;flex-basis:200px;
+        background:linear-gradient(155deg, ${c1}, ${c2});display:flex;align-items:center;justify-content:center;
+        font-family:var(--display);font-size:64px;color:rgba(255,255,255,0.85);">
+        K
+      </div>
+      <div class="series-info">
+        <h1>${escapeHtml(ARTIST.name)}</h1>
+        <div class="by">${escapeHtml(ARTIST.location)}</div>
+        <p class="synopsis">${escapeHtml(ARTIST.bio)}</p>
+        <div class="action-row">
+          ${ARTIST.socials.map(s=>`<a class="btn-ghost" href="${s.url}" target="_blank">${escapeHtml(s.label)}</a>`).join('')}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderBrowse(genreFilter){
+  const all = Store.getAllSeries();
+  const filtered = genreFilter ? all.filter(s=>s.genre===genreFilter) : all;
+  app.innerHTML = `
+    <div class="shelf" style="margin-top:32px;">
+      <div class="shelf-head">
+        <h2><span class="tick"></span>${genreFilter || 'All Series'}</h2>
+        <span class="count">${filtered.length} series</span>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:22px;">
+        <a href="#/browse" class="btn-ghost" style="padding:6px 12px;font-size:12px;">All</a>
+        ${GENRES.map(g=>`<a href="#/browse/${encodeURIComponent(g)}" class="btn-ghost" style="padding:6px 12px;font-size:12px;">${g}</a>`).join('')}
+      </div>
+      <div class="grid-series">${filtered.map(seriesCard).join('')}</div>
+    </div>
+  `;
+}
+
+function renderSeries(id){
+  const s = Store.getSeries(id);
+  if(!s){ app.innerHTML = `<div class="empty-state"><h3>Series not found</h3></div>`; return; }
+  const lib = Store.getLibrary();
+  const inLib = lib.includes(id);
+  const progress = Store.getProgress(id);
+  const chaptersDesc = [...s.chapters].sort((a,b)=>b.num-a.num);
+
+  app.innerHTML = `
+    <div class="series-hero">
+      <div class="series-cover" style="${coverStyle(s.id)}"></div>
+      <div class="series-info">
+        <span class="genre-pill">${s.genre}</span>
+        <h1>${escapeHtml(s.title)}</h1>
+        <div class="by">by <b>${escapeHtml(s.author)}</b></div>
+        <p class="synopsis">${escapeHtml(s.synopsis)}</p>
+        <div class="stat-row">
+          <div><b>${s.chapters.length}</b>chapters</div>
+          <div><b>${s.likes}</b>likes</div>
+          <div><b>${s.views}</b>views</div>
+        </div>
+        <div class="action-row">
+          <button class="btn-primary" onclick="location.hash='#/read/${s.id}/${(progress&&s.chapters.find(c=>c.id===progress.chapterId))?progress.chapterId:s.chapters[0].id}'">${progress?'Continue Reading':'Start Reading'}</button>
+          <button class="btn-ghost" id="libBtn">${inLib?'✓ In Library':'+ Add to Library'}</button>
+        </div>
+      </div>
+    </div>
+    <div class="chapter-list">
+      <div class="shelf-head"><h2><span class="tick"></span>Chapters</h2></div>
+      ${chaptersDesc.map(c=>`
+        <div class="chapter-row" onclick="location.hash='#/read/${s.id}/${c.id}'">
+          <div class="chapter-left">
+            <span class="chapter-num">#${c.num}</span>
+            <div>
+              <div class="chapter-title">${escapeHtml(c.title)}</div>
+              <div class="chapter-date">${fmtDate(c.createdAt)} · ${c.panels.length} panels</div>
+            </div>
+          </div>
+          ${progress && progress.chapterId===c.id ? '<span class="read-badge">● LAST READ</span>' : ''}
+        </div>
+      `).join('')}
+    </div>
+  `;
+  document.getElementById('libBtn').onclick = (e)=>{
+    e.stopPropagation();
+    Store.toggleLibrary(id);
+    toast(Store.getLibrary().includes(id) ? 'Added to library' : 'Removed from library');
+    renderSeries(id);
+  };
+}
+
+function renderReader(seriesId, chapterId){
+  const s = Store.getSeries(seriesId);
+  if(!s){ app.innerHTML = `<div class="empty-state"><h3>Series not found</h3></div>`; return; }
+  const chapters = [...s.chapters].sort((a,b)=>a.num-b.num);
+  const idx = chapters.findIndex(c=>c.id===chapterId);
+  const chapter = chapters[idx];
+  if(!chapter){ app.innerHTML = `<div class="empty-state"><h3>Chapter not found</h3></div>`; return; }
+
+  s.views = (s.views||0)+1;
+  Store.saveSeries(s);
+  Store.setProgress(seriesId, chapterId);
+
+  const prev = chapters[idx-1];
+  const next = chapters[idx+1];
+  const comments = Store.getComments(chapterId);
+
+  app.innerHTML = `
+    <div class="reader-shell">
+      <div class="ink-rail"><div class="ink-rail-fill" id="railFill" style="height:0%;"></div></div>
+      <div class="reader-main">
+        <div class="reader-topbar">
+          <div>
+            <div class="stitle"><a href="#/series/${s.id}">${escapeHtml(s.title)}</a></div>
+            <div class="ctitle">#${chapter.num} — ${escapeHtml(chapter.title)}</div>
+          </div>
+          <div class="stitle">${chapter.panels.length} panels</div>
+        </div>
+        <div id="panelsWrap">
+          ${chapter.panels.map((p,i)=> p.url
+            ? `<img class="panel" src="${escapeHtml(p.url)}" alt="panel ${i+1}" loading="lazy"/>`
+            : `<div class="panel panel-placeholder" style="${panelPlaceholderStyle(p.seed||(chapter.id+i))}"><span class="cap">${escapeHtml(p.caption||('panel '+(i+1)))}</span></div>`
+          ).join('')}
+        </div>
+        <div class="reader-end">
+          <div class="eyebrow">End of chapter</div>
+          <div style="font-family:var(--display);font-size:22px;text-transform:uppercase;">${next?'Next up: '+escapeHtml(next.title):"You're all caught up"}</div>
+          ${next?`<button class="btn-primary" onclick="location.hash='#/read/${s.id}/${next.id}'">Continue →</button>`:`<button class="btn-ghost" onclick="location.hash='#/series/${s.id}'">Back to Series</button>`}
+        </div>
+        <div class="chapter-nav">
+          <button class="btn-ghost" ${prev?`onclick="location.hash='#/read/${s.id}/${prev.id}'"`:'disabled style="opacity:.3"'}>← Previous</button>
+          <button class="btn-ghost" onclick="location.hash='#/series/${s.id}'">All Chapters</button>
+          <button class="btn-ghost" ${next?`onclick="location.hash='#/read/${s.id}/${next.id}'"`:'disabled style="opacity:.3"'}>Next →</button>
+        </div>
+        <div class="comments">
+          <h3>Comments (${comments.length})</h3>
+          <div class="comment-form">
+            <input id="commentName" placeholder="Your name" style="max-width:140px;"/>
+            <input id="commentText" placeholder="Say something about this chapter…"/>
+            <button class="btn-primary" id="commentSend">Post</button>
+          </div>
+          <div id="commentList">
+            ${comments.slice().reverse().map(c=>`
+              <div class="comment">
+                <span class="who">${escapeHtml(c.who)}</span><span class="when">${timeAgo(c.ts)}</span>
+                <p>${escapeHtml(c.text)}</p>
+              </div>`).join('') || '<div style="color:var(--muted);font-size:13px;">No comments yet.</div>'}
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  const rail = document.getElementById('railFill');
+  function onScroll(){
+    const h = document.documentElement.scrollHeight - window.innerHeight;
+    const pct = h>0 ? Math.min(100,(window.scrollY/h)*100) : 0;
+    rail.style.height = pct+'%';
+  }
+  window.addEventListener('scroll', onScroll);
+  onScroll();
+  window.scrollTo(0,0);
+
+  document.getElementById('commentSend').onclick = ()=>{
+    const who = document.getElementById('commentName').value.trim() || 'Anonymous';
+    const text = document.getElementById('commentText').value.trim();
+    if(!text) return;
+    Store.addComment(chapterId, who, text);
+    document.getElementById('commentText').value = '';
+    renderReader(seriesId, chapterId);
+  };
+}
+
+function renderLibrary(){
+  const lib = Store.getLibrary();
+  const series = lib.map(id=>Store.getSeries(id)).filter(Boolean);
+  app.innerHTML = `
+    <div class="shelf" style="margin-top:32px;">
+      <div class="shelf-head"><h2><span class="tick"></span>My Library</h2><span class="count">${series.length} series</span></div>
+      ${series.length ? `<div class="grid-series">${series.map(seriesCard).join('')}</div>` :
+        `<div class="empty-state"><h3>Your library is empty</h3>Add series from any series page.</div>`}
+    </div>
+  `;
+}
+
+let uploadState = { panels: [] };
+
+function panelEditorRow(i){
+  return `<div class="panel-editor" data-idx="${i}">
+    <div class="panel-editor-row">
+      <input type="text" placeholder="Image URL (optional)" class="panel-url"/>
+      <button class="remove-x" onclick="removePanelRow(${i})">✕</button>
+    </div>
+  </div>`;
+}
+window.removePanelRow = function(i){
+  uploadState.panels.splice(i,1);
+  renderPanelEditors();
+};
+function renderPanelEditors(){
+  const wrap = document.getElementById('panelEditors');
+  if(!wrap) return;
+  wrap.innerHTML = uploadState.panels.map((_,i)=>panelEditorRow(i)).join('');
+  wrap.querySelectorAll('.panel-url').forEach((inp,i)=>{
+    inp.value = uploadState.panels[i]||'';
+    inp.oninput = ()=>{ uploadState.panels[i] = inp.value; };
+  });
+}
+
+function renderUpload(){
+  uploadState = { panels: ["","",""] };
+  const all = Store.getAllSeries();
+  app.innerHTML = `
+    <div class="form-card">
+      <h2>Publish a New Series</h2>
+      <div class="sub">Publishing as <b style="color:var(--paper)">${escapeHtml(ARTIST.name)}</b></div>
+      <div class="field"><label>Title</label><input id="fTitle" placeholder="Series title"/></div>
+      <div class="field"><label>Genre</label>
+        <select id="fGenre">${GENRES.map(g=>`<option>${g}</option>`).join('')}</select>
+      </div>
+      <div class="field"><label>Synopsis</label><textarea id="fSyn" placeholder="What's this story about?"></textarea></div>
+      <div class="field">
+        <label>First chapter — panels</label>
+        <div id="panelEditors"></div>
+        <button class="add-panel-btn" id="addPanelBtn">+ Add panel</button>
+      </div>
+      <button class="btn-primary" id="publishBtn" style="width:100%;padding:14px;">Publish Series</button>
+    </div>
+    ${all.length ? `
+    <div class="shelf">
+      <div class="shelf-head"><h2><span class="tick"></span>Add Chapter to Existing Series</h2></div>
+      <div class="grid-series">
+        ${all.map(s=>`<div class="card" onclick="location.hash='#/add-chapter/${s.id}'">
+          <div class="cover" style="${coverStyle(s.id)}"><div><span class="genre-pill">${s.genre}</span><br/><span class="title">${escapeHtml(s.title)}</span></div></div>
+          <div class="meta"><span class="author">${escapeHtml(s.author)}</span>${s.chapters.length} ch</div>
+        </div>`).join('')}
+      </div>
+    </div>` : ''}
+  `;
+  renderPanelEditors();
+  document.getElementById('addPanelBtn').onclick = ()=>{ uploadState.panels.push(""); renderPanelEditors(); };
+  document.getElementById('publishBtn').onclick = ()=>{
+    const title = document.getElementById('fTitle').value.trim();
+    const genre = document.getElementById('fGenre').value;
+    const synopsis = document.getElementById('fSyn').value.trim();
+    if(!title||!synopsis){ toast('Add title and synopsis'); return; }
+    const id = uid('s');
+    const now = Date.now();
+    const panels = uploadState.panels.map((url,i)=>({url:url?url.trim():null, seed:id+'-1-'+i, caption:'panel '+(i+1)}));
+    const chapter = {id:uid('ch'), num:1, title:'Chapter 1', panels:panels.length?panels:[{url:null,seed:id+'-1-0',caption:'panel 1'}], createdAt:now};
+    const series = {id, title, author:ARTIST.name, genre, synopsis, chapters:[chapter], likes:0, views:0, createdAt:now, updatedAt:now};
+    Store.saveSeries(series);
+    const idx = Store.getIndex(); idx.push(id); Store.saveIndex(idx);
+    toast('Series published!');
+    location.hash = '#/series/'+id;
+  };
+}
+
+function renderAddChapter(seriesId){
+  const s = Store.getSeries(seriesId);
+  if(!s){ app.innerHTML=`<div class="empty-state"><h3>Series not found</h3></div>`; return; }
+  uploadState = {panels:["","",""]};
+  app.innerHTML = `
+    <div class="form-card">
+      <h2>New Chapter</h2>
+      <div class="sub">Adding to <b style="color:var(--paper)">${escapeHtml(s.title)}</b> — chapter ${s.chapters.length+1}</div>
+      <div class="field"><label>Chapter title</label><input id="fCTitle" placeholder="Chapter title"/></div>
+      <div class="field">
+        <label>Panels</label>
+        <div id="panelEditors"></div>
+        <button class="add-panel-btn" id="addPanelBtn">+ Add panel</button>
+      </div>
+      <button class="btn-primary" id="publishChBtn" style="width:100%;padding:14px;">Publish Chapter</button>
+    </div>
+  `;
+  renderPanelEditors();
+  document.getElementById('addPanelBtn').onclick = ()=>{ uploadState.panels.push(""); renderPanelEditors(); };
+  document.getElementById('publishChBtn').onclick = ()=>{
+    const title = document.getElementById('fCTitle').value.trim();
+    if(!title){ toast('Give the chapter a title'); return; }
+    const num = s.chapters.length+1;
+    const chId = uid('ch');
+    const panels = uploadState.panels.map((url,i)=>({url:url?url.trim():null, seed:chId+'-'+i, caption:'panel '+(i+1)}));
+    s.chapters.push({id:chId, num, title, panels:panels.length?panels:[{url:null,seed:chId+'-0',caption:'panel 1'}], createdAt:Date.now()});
+    s.updatedAt = Date.now();
+    Store.saveSeries(s);
+    toast('Chapter published!');
+    location.hash = '#/series/'+s.id;
+  };
+}
+
+function renderSearch(q){
+  const all = Store.getAllSeries();
+  const qq = q.toLowerCase();
+  const results = all.filter(s => s.title.toLowerCase().includes(qq) || s.author.toLowerCase().includes(qq));
+  app.innerHTML = `
+    <div class="shelf" style="margin-top:32px;">
+      <div class="shelf-head"><h2><span class="tick"></span>Results for "${escapeHtml(q)}"</h2><span class="count">${results.length} found</span></div>
+      ${results.length ? `<div class="grid-series">${results.map(seriesCard).join('')}</div>` :
+        `<div class="empty-state"><h3>Nothing matched</h3></div>`}
+    </div>
+  `;
+}
+
+/* ================= ROUTER ================= */
+function setActiveNav(route){
+  document.querySelectorAll('#siteNav a').forEach(a=>{
+    a.classList.toggle('active', a.dataset.route===route);
+  });
+}
+
+function router(){
+  const hash = location.hash || '#/home';
+  const parts = hash.replace('#/','').split('/').filter(Boolean);
+  window.scrollTo(0,0);
+
+  if(parts[0]==='home' || !parts.length){ setActiveNav('home'); renderHome(); }
+  else if(parts[0]==='browse'){ setActiveNav('browse'); renderBrowse(parts[1]?decodeURIComponent(parts[1]):null); }
+  else if(parts[0]==='series' && parts[1]){ setActiveNav(''); renderSeries(parts[1]); }
+  else if(parts[0]==='read' && parts[1] && parts[2]){ setActiveNav(''); renderReader(parts[1], parts[2]); }
+  else if(parts[0]==='upload'){ setActiveNav(''); renderUpload(); }
+  else if(parts[0]==='add-chapter' && parts[1]){ setActiveNav(''); renderAddChapter(parts[1]); }
+  else if(parts[0]==='about'){ setActiveNav('about'); renderAbout(); }
+  else if(parts[0]==='library'){ setActiveNav('library'); renderLibrary(); }
+  else if(parts[0]==='search' && parts[1]){ setActiveNav(''); renderSearch(decodeURIComponent(parts[1])); }
+  else { setActiveNav('home'); renderHome(); }
+}
+
+window.addEventListener('hashchange', router);
+window.addEventListener('DOMContentLoaded', router);
+router();
+document.getElementById('footerArtist').textContent = ARTIST.name;
+
+document.getElementById('searchInput').addEventListener('keydown', e=>{
+  if(e.key==='Enter'){
+    const v = e.target.value.trim();
+    if(v) location.hash = '#/search/'+encodeURIComponent(v);
+  }
+});
+</script>
+</body>
+</html>
