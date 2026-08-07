@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title><img src="logo.jpg" alt="GhostInk" onclick="location.hash='#/home'" style="height:36px; width:auto; cursor:pointer; display:block;" /></title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=JetBrains+Mono:wght@400;600&family=Work+Sans:wght@400;500;600;700&family=Noto+Sans+JP:wght@700&display=swap" rel="stylesheet">
 <style>
@@ -19,7 +20,6 @@
     --display: 'Anton', sans-serif;
     --body: 'Work Sans', sans-serif;
     --mono: 'JetBrains Mono', monospace;
-    --title-jp: 'Noto Sans JP', sans-serif;
     --radius: 3px;
   }
   *{box-sizing:border-box;}
@@ -46,11 +46,12 @@
     backdrop-filter:blur(6px);
     border-bottom:1px solid rgba(243,236,221,0.1);
   }
-  .logo-img{
-    height:40px;
-    width:auto;
+  .logo-text{
+    font-family:var(--display);
+    font-size:22px;
+    letter-spacing:1px;
     cursor:pointer;
-    display:block;
+    color:var(--paper);
   }
   nav.site-nav{display:flex;gap:4px;margin-left:8px;}
   nav.site-nav a{
@@ -135,7 +136,7 @@
   .series-cover{width:230px;height:310px;border-radius:6px;flex:0 0 230px;box-shadow:0 12px 30px rgba(0,0,0,0.5);}
   .series-info{flex:1;min-width:280px;}
   .series-info .genre-pill{background:var(--jade-dim);}
-  .series-info h1{font-family:var(--title-jp);font-size:40px;text-transform:uppercase;margin:8px 0 4px;line-height:1;}
+  .series-info h1{font-family:var(--display);font-size:40px;text-transform:uppercase;margin:8px 0 4px;line-height:1;}
   .series-info .by{color:var(--muted);font-size:14px;margin-bottom:16px;}
   .series-info .by b{color:var(--paper-dim);}
   .series-info .synopsis{color:var(--paper-dim);line-height:1.7;font-size:14.5px;max-width:640px;margin-bottom:20px;}
@@ -253,7 +254,7 @@
 <body>
 
 <header class="site">
-  <img class="logo-img" id="logoImg" src="logo.jpg" alt="GhostInk logo" onclick="location.hash='#/home'" />
+  <div class="logo-text" onclick="location.hash='#/home'">GhostInk</div>
   <nav class="site-nav" id="siteNav">
     <a href="#/home" data-route="home">Home</a>
     <a href="#/browse" data-route="browse">Series</a>
