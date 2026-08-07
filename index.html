@@ -3,7 +3,9 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<img src="logo.jpg" alt="GhostInk" onclick="location.hash='#/home'" style="height:36px; width:auto; cursor:pointer; display:block;" />
+<title>GhostInk — vertical comics</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=JetBrains+Mono:wght@400;600&family=Work+Sans:wght@400;500;600;700&family=Noto+Sans+JP:wght@700&display=swap" rel="stylesheet">
 <style>
   :root{
     --ink:#15130f;
@@ -370,12 +372,12 @@ function seedIfEmpty(){
   const idx = Store.getIndex();
   if(idx.length > 0) return;
   const seeds = [
-    {title:"Against the Grain", genre:"Slice of Life",
-     synopsis:"A collection of short stories featuring unconventional characters navigating a modern world that’s far from ideal. These fictional tales explore relatable struggles, resilience, and connection. Genres include Drama, Action, Romance, and more, told within a Teen rating. All characters and events are entirely fictional; any resemblance to real people or events is purely coincidental."},
-    {title:"Kuroi Akuma: The Black Demon", genre:"Action Drama",
-     synopsis:"Sold into slavery at nine, Asher kills to survive, becoming the feared "Kuroi Akuma" by fourteen. For eight years, he battles in his war-ravaged nation, split by a river, against a dominant Western empire. When facing a towering Western warrior with a massive claymore, Asher, outmatched, launches a desperate attack. Expecting death, he's shocked as his foe falls, leaving him the sole survivor. Now, amidst the chaos, Asher questions the essence of survival and his identity as the Black Demon."},
-    {title:"Zombie Eater", genre:"Horror Action Drama",
-     synopsis:"After a motocross accident leaves high school senior Ran hospitalized and isolated, a violent clash with his friend Cho and a mysterious cut from a rusty knife changes everything. Awakening to a world overrun by flesh-eating monsters, Ran discovers he’s no longer the broken teen he was, he’s healed, stronger, and somehow different. As he navigates a desolate landscape filled with mindless zombies, Ran must uncover the truth behind his transformation while battling to hold onto his humanity."}
+    {title:"Low Tide Diner", genre:"Slice of Life",
+     synopsis:"A tiny diner open only during low tide, and the strange regulars who always arrive on time."},
+    {title:"The Hollow Choir", genre:"Horror",
+     synopsis:"Every year the village sings the same song to keep something asleep. This year, someone forgets a line."},
+    {title:"Nine Tailwinds", genre:"Fantasy",
+     synopsis:"A courier fox-spirit runs letters between worlds — until one delivery goes catastrophically wrong."}
   ];
   const now = Date.now();
   const ids = [];
